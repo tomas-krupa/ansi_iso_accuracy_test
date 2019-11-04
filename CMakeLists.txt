@@ -6,19 +6,28 @@ set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-set(ANSIISO_ACCURACY_TEST_ENABLE_UNIT_TESTS ON CACHE BOOL "Perform unit tests of the application")
-set(ANSIISO_ACCURACY_TEST_ENABLE_STATIC_ANALYSIS ON CACHE BOOL "Perform static analyse of the application")
+set(ANSIISO_ACCURACY_TEST_ENABLE_UNIT_TESTS ON
+        CACHE BOOL "Perform unit tests of the application")
+set(ANSIISO_ACCURACY_TEST_ENABLE_STATIC_ANALYSIS ON
+        CACHE BOOL "Perform static analyse of the application")
 
-set(ANSSIISO_ACCURACY_TEST_PRODUCT_STRING "${PROJECT_NAME} v${PROJECT_VERSION}" CACHE STRING "Product string")
-set(ANSSIISO_ACCURACY_TEST_ABI_VERSION "${PROJECT_NAME}-${PROJECT_VERSION_MAJOR}" CACHE STRING "ABI version")
-string(REGEX REPLACE "[&, ]" "_" ANSSIISO_ACCURACY_TEST_ABI_VERSION ${ANSSIISO_ACCURACY_TEST_ABI_VERSION})
+set(ANSSIISO_ACCURACY_TEST_PRODUCT_STRING
+        "${PROJECT_NAME} v${PROJECT_VERSION}" CACHE STRING "Product string")
+set(ANSSIISO_ACCURACY_TEST_ABI_VERSION
+        "${PROJECT_NAME}-${PROJECT_VERSION_MAJOR}" CACHE STRING "ABI version")
+string(REGEX REPLACE "[&, ]" "_"
+        ANSSIISO_ACCURACY_TEST_ABI_VERSION ${ANSSIISO_ACCURACY_TEST_ABI_VERSION})
 
-if(EXISTS ${CMAKE_CURRENT_BINARY_DIR}/conan_paths.cmake)
-    message("Detected Conan-powered build")
+if (EXISTS ${CMAKE_CURRENT_BINARY_DIR}/conan_paths.cmake)
+    message(STATUS "Running Conan-powered build")
     include(${CMAKE_CURRENT_BINARY_DIR}/conan_paths.cmake)
-endif()
+else ()
+    message(FATAL_ERROR "No Conan paths found")
+endif ()
 
-configure_file(src/config.hpp.in config.hpp @ONLY)
+configure_file(src/config.hpp.in innovatrics/config.hpp @ONLY)
+list(APPEND EXPORT_HEADERS
+        ${CMAKE_CURRENT_BINARY_DIR}/innovatrics/config.hpp)
 
 find_package(iengine_ansi_iso REQUIRED)
 
@@ -26,33 +35,61 @@ find_package(iengine_ansi_iso REQUIRED)
 ######################### BUILD #########################
 #########################################################
 
-add_library(ansiiso_accurracy_test_lib STATIC
-    src/Application.cpp )
+add_library(accuracy_test_lib INTERFACE)
+add_library(ansiiso::accuracy_test_lib ALIAS accuracy_test_lib)
 
-add_library(ansiiso::accuracy_test_lib ALIAS ansiiso_accurracy_test_lib)
+target_link_libraries(accuracy_test_lib
+        INTERFACE
+        iengine_ansi_iso::iengine_ansi_iso)
 
-target_link_libraries(ansiiso_accurracy_test_lib PRIVATE iengine_ansi_iso::iengine_ansi_iso)
+target_include_directories(accuracy_test_lib
+        INTERFACE
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
+        $<INSTALL_INTERFACE:include>)
 
-target_include_directories(ansiiso_accurracy_test_lib
-    PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
-    $<INSTALL_INTERFACE:include>)
+add_executable(ansiiso_accuracy_test
+        src/Main.cpp)
 
-add_executable(ansiiso_accurracy_test
-    src/Main.cpp)
+target_link_libraries(ansiiso_accuracy_test
+        PRIVATE
+        ansiiso::accuracy_test_lib)
 
-target_link_libraries(ansiiso_accurracy_test PRIVATE ansiiso::accuracy_test_lib)
+list(APPEND EXPORT_HEADERS
+        ${CMAKE_CURRENT_SOURCE_DIR}/include/innovatrics/ansiiso.hpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/include/innovatrics/ansiiso_accuracy_test.hpp)
 
-install(TARGETS ansiiso_accurracy_test RUNTIME DESTINATION bin COMPONENT runtime)
-install(TARGETS ansiiso_accurracy_test_lib EXPORT ansiiso_accurracy_test_lib-targets DESTINATION lib)
+install(TARGETS ansiiso_accuracy_test
+        RUNTIME DESTINATION bin
+        COMPONENT runtime)
+
+install(TARGETS accuracy_test_lib
+        EXPORT ansiiso_accuracy_test_lib-targets
+        DESTINATION include
+        COMPONENT development)
 
 # Export targets
 include(CMakePackageConfigHelpers)
-install(EXPORT ansiiso_accurracy_test_lib-targets
-  FILE ansiiso_accurracy_test_lib-targets.cmake
-  NAMESPACE ansiiso::
-  DESTINATION lib/cmake/ansiiso_accurracy_test_lib)
+install(EXPORT ansiiso_accuracy_test_lib-targets
+        FILE ansiiso_accuracy_test_lib-targets.cmake
+        NAMESPACE ansiiso::
+        DESTINATION lib/cmake/ansiiso_accuracy_test_lib
+        COMPONENT development)
+
+write_basic_package_version_file(ansiiso_accuracy_test_lib-config-version.cmake
+        VERSION ${boost_VERSION}
+        COMPATIBILITY SameMajorVersion)
+
+configure_package_config_file(
+        ${CMAKE_CURRENT_SOURCE_DIR}/cmake/ansiiso_accuracy_test_lib-config.cmake.in
+        ${CMAKE_CURRENT_BINARY_DIR}/ansiiso_accuracy_test_lib-config.cmake
+        INSTALL_DESTINATION lib/cmake/ansiiso_accuracy_test_lib)
+
+install(FILES
+        ${CMAKE_CURRENT_BINARY_DIR}/ansiiso_accuracy_test_lib-config.cmake
+        ${CMAKE_CURRENT_BINARY_DIR}/ansiiso_accuracy_test_lib-config-version.cmake
+        DESTINATION lib/cmake/ansiiso_accuracy_test_lib
+        COMPONENT development)
 
 #########################################################
 ######################### TEST #########################
@@ -66,20 +103,27 @@ if (ANSIISO_ACCURACY_TEST_ENABLE_UNIT_TESTS)
         message(STATUS "Catch2 - FOUND")
         enable_testing()
 
+        add_executable(ansiiso_accuracy_unit_test_base
+                test/TestBase.cpp)
+
         add_test(NAME ansiiso_accuracy_unit_test_base
-            SOURCES          test/TestMain.cpp
-            COMMAND $<TARGET_FILE:ansiiso_accuracy_unit_test_base>
-            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/test/assets)
+                COMMAND $<TARGET_FILE:ansiiso_accuracy_unit_test_base>
+                WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/test/)
 
-        target_link_libraries(ansiiso_accuracy_unit_test_base PRIVATE ansiiso::accuracy_test_lib Catch2::Catch2)
-        target_include_directories(ansiiso_accuracy_unit_test_base PRIVATE
-            $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/test>)
-        install(TARGETS ansiiso_accuracy_unit_test_base RUNTIME DESTINATION bin/test COMPONENT test)
+        target_link_libraries(ansiiso_accuracy_unit_test_base
+                PRIVATE
+                ansiiso::accuracy_test_lib Catch2::Catch2)
+        target_include_directories(ansiiso_accuracy_unit_test_base
+                PRIVATE
+                $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/test>)
+        install(TARGETS ansiiso_accuracy_unit_test_base
+                RUNTIME DESTINATION bin/test
+                COMPONENT test)
 
-    else()
+    else ()
         message(STATUS "Catch2 - NOT FOUND")
-    endif()
-endif()
+    endif ()
+endif ()
 
 #########################################################
 ######################### PACK ##########################
@@ -88,25 +132,29 @@ endif()
 set(CPACK_PACKAGE_VENDOR "Innovatrics")
 set(CPACK_SYSTEM_NAME "${CMAKE_SYSTEM_NAME}.x86_64")
 set(CPACK_PACKAGE_NAME ${PROJECT_NAME})
-set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Accuracy ad performmace bechmark tool for Innovatrics ANSI&ISO SDK.")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY
+        "Accuracy ad performmace bechmark tool for Innovatrics ANSI&ISO SDK.")
 set(CPACK_PACKAGE_MAINTAINER "tomas.krupa@innovatrics.com")
 set(CPACK_PACKAGE_VERSION_MAJOR ${PROJECT_VERSION_MAJOR})
 set(CPACK_PACKAGE_VERSION_MINOR ${PROJECT_VERSION_MINOR})
 set(CPACK_PACKAGE_VERSION_PATCH ${PROJECT_VERSION_PATCH})
-set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH}-${CPACK_SYSTEM_NAME}")
+set(CPACK_PACKAGE_FILE_NAME
+        "${CPACK_PACKAGE_NAME}-${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}.\
+        ${CPACK_PACKAGE_VERSION_PATCH}-${CPACK_SYSTEM_NAME}")
 set(CPACK_MONOLITHIC_INSTALL ON)
 set(CPACK_STRIP_FILES yes)
 
 set(CPACK_INSTALL_CMAKE_PROJECTS
-    ${CMAKE_BINARY_DIR}    ${PROJECT_NAME}  "runtime"       "/"
-    ${CMAKE_BINARY_DIR}    ${PROJECT_NAME}  "post-runtime"  "/"
-    ${CMAKE_BINARY_DIR}    ${PROJECT_NAME}  "documentation" "/")
+        ${CMAKE_BINARY_DIR} ${PROJECT_NAME} "runtime" "/"
+        ${CMAKE_BINARY_DIR} ${PROJECT_NAME} "post-runtime" "/"
+        ${CMAKE_BINARY_DIR} ${PROJECT_NAME} "documentation" "/")
 
-if(UNIX)
+if (UNIX)
     set(CPACK_GENERATOR TBZ2)
     set(CPACK_RESOURCE_FILE_LICENSE ${CMAKE_CURRENT_SOURCE_DIR}/LICENSE.txt)
-endif()
+endif ()
 
+install(FILES ${EXPORT_HEADERS} DESTINATION include/innovatrics COMPONENT development)
 install(FILES CHANGELOG.md DESTINATION doc COMPONENT documentation)
 install(FILES README.md DESTINATION . COMPONENT documentation)
 

@@ -35,6 +35,7 @@
 _build*
 cmake-build*
 .idea/
+test_package/build
 
 # Others
 CMakeLists.txt.user*

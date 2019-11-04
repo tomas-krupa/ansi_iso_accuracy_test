@@ -12,7 +12,7 @@
 
 #include <string>
 
-#include <config.hpp>
+#include <innovatrics/config.hpp>
 
 namespace Innovatrics {
 

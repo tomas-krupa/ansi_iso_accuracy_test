@@ -11,11 +11,11 @@
 #include <iostream>
 #include <string>
 
-void
+bool
 check_eternity()
 {
-  return Innovatrics::AnsiIsoAccuracyTest::GetProductString().find("ANSI") !=
-         std::npos;
+  return Innovatrics::AnsiIsoAccuracyTest::GetProductString().find("ANSI") ==
+         std::string::npos;
 }
 
 int
