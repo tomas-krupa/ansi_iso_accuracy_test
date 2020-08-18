@@ -1,0 +1,8 @@
+# variables for doxygen final configuration
+set(@Name@Documentation_TAGSFILE "@TAGSFILE@")
+set(@Name@Documentation_Type @TYPE@)
+set(@Name@Documentation_OutputDir "@OUTPUTDIR@")
+set(@Name@Documentation_HtmlOutputDir "@HTMLOUTPUTDIR@")
+set(@Name@Documentation_PdfOutputDir "@PDFOUTPUTDIR@")
+set(@Name@Documentation_PdfName "@PDFNAME@")
+

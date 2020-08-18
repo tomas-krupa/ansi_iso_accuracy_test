@@ -1,0 +1,152 @@
+#
+# Cmake instructions file
+#
+cmake_minimum_required(VERSION 2.8) 
+
+if(NOT DEFINED DataFile)
+    message(SEND_ERROR "DataFile has to be defined")
+endif()
+
+if(RULE_LAUNCH_COMPILE)
+	set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE "${RULE_LAUNCH_COMPILE}")
+endif()
+
+if(RULE_LAUNCH_LINK)
+	set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK "${RULE_LAUNCH_LINK}")
+endif()
+
+if(CMAKE_TOOLCHAIN_FILE)
+endif()
+
+include(${DataFile})
+include(${DOCUMENTATION_SCRIPTS_ROOT_DIR}/DecorateMdPagesAsGroups.cmake)
+
+project(Documentation NONE)
+
+# copy all md pages and transform them to groups
+if(EXISTS ${CMAKE_CURRENT_BINARY_DIR}/pages)
+    file(REMOVE_RECURSE ${CMAKE_CURRENT_BINARY_DIR}/pages)
+endif()
+file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/pages)
+file(COPY ${DOX_INPUT} DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/pages FILES_MATCHING PATTERN *.md)
+file(GLOB_RECURSE mdPages LIST_DIRECTORIES false ${CMAKE_CURRENT_BINARY_DIR}/pages/*.md)
+foreach(mdPage ${mdPages})
+    file(RENAME "${mdPage}" "${mdPage}page")
+endforeach()
+foreach(mdPage ${mdPages})
+    file(READ "${mdPage}page" c)
+    MDPagesAsGroup("${c}" cm "${mdPage}page" "${DOX_INPUT}")
+    file(WRITE "${mdPage}page" "${cm}")
+endforeach()
+
+set(DOX_EXTENSION_MAPPING "${DOX_EXTENSION_MAPPING} mdpage=C++")
+set(DOX_INPUT "${DOX_INPUT} ${CMAKE_CURRENT_BINARY_DIR}/pages")
+set(DOX_FILE_PATTERNS "${DOX_FILE_PATTERNS} *.mdpage")
+#set(DOX_FILTER_PATTERNS "${FILTER_PATTERNS} *.mdpage=${DOX_INPUT_FILTER}")
+
+
+find_program(PDFTK "pdftk")
+find_program(PERL "perl")
+if (NOT PDFTK OR NOT PERL)
+	message(STATUS "No pdftk or perl find on system. The links to other dependencies in generated pdf files will not work. They will work after install/pack.")
+endif()       
+
+set(REPLACEMENTS_VARIABLES "")
+if (PDFTK AND PERL)
+	string(APPEND REPLACEMENTS_VARIABLES "set(pdftk \"${PDFTK}\")\n")
+	string(APPEND REPLACEMENTS_VARIABLES "set(perl \"${PERL}\")\n")
+endif()
+
+string(APPEND REPLACEMENTS_VARIABLES "set(Tags \"\")\n")
+
+set(tags "\\ \n")
+set(DOX_TAGFILES "${tags}")
+
+configure_file(${DOCUMENTATION_SCRIPTS_ROOT_DIR}/defaultDoxygenFinalConfig.in "${Type}.doxyfile" @ONLY)
+
+# build documentation
+# add shell scripts that build documentation if target support documentation
+# Target support documentation when it export documentation config
+
+# because doxygen doesn't know its dependencies (source files) do documentation always
+add_custom_command(
+    OUTPUT documentation.always
+    COMMENT ""
+)
+
+ add_custom_command(
+    OUTPUT doxygen.build
+    COMMAND ${DOXYGEN} ${Type}.doxyfile
+    COMMAND ${CMAKE_COMMAND} -E touch doxygen.build
+    DEPENDS documentation.always
+    COMMENT ""
+)
+
+if(DOX_GENERATE_LATEX)
+	file(MAKE_DIRECTORY ${DOX_OUTPUT_DIRECTORY}/pdf)
+	
+	set(pdfFileName "refman.pdf")
+	if(NOT "" STREQUAL "${OutputFileName}")
+		set(RenameCommand COMMAND ${CMAKE_COMMAND} -E rename refman.pdf ${OutputFileName}.pdf)
+		set(pdfFileName "${OutputFileName}.pdf")
+	endif()
+
+	# copy external files
+	if (NOT "" STREQUAL "${DOX_LATEX_EXTRA_FILES}")
+		foreach(ef ${DOX_LATEX_EXTRA_FILES})
+			file(COPY ${ef} DESTINATION  ${DOX_OUTPUT_DIRECTORY}/pdf)
+		endforeach()
+	endif()
+
+    if("Windows" STREQUAL "${CMAKE_HOST_SYSTEM_NAME}" OR WIN32)
+    	set(MAKE_CMD make.bat)
+    else()
+    	set(MAKE_CMD make)
+    endif()
+    
+	add_custom_command(
+	    OUTPUT final.build
+	    COMMAND ${MAKE_CMD}
+	    ${RenameCommand}
+	    COMMAND ${CMAKE_COMMAND} -E touch ${CMAKE_BINARY_DIR}/final.build
+	    COMMAND ${CMAKE_COMMAND} -E copy ${DOX_OUTPUT_DIRECTORY}/latex/${pdfFileName} ${DOX_OUTPUT_DIRECTORY}/pdf
+	    DEPENDS doxygen.build
+	    WORKING_DIRECTORY ${DOX_OUTPUT_DIRECTORY}/latex
+	    COMMENT ""
+	)
+else()
+	# copy external files
+	if (NOT "" STREQUAL "${DOX_HTML_EXTRA_FILES}")
+		foreach(ef ${DOX_HTML_EXTRA_FILES})
+			file(COPY ${ef} DESTINATION  ${DOX_OUTPUT_DIRECTORY}/html)
+		endforeach()
+	endif()		
+	
+	add_custom_command(
+	    OUTPUT final.build
+	    COMMAND ${CMAKE_COMMAND} -E touch final.build
+	    DEPENDS doxygen.build
+	    COMMENT ""
+	)
+endif()
+
+add_custom_target(documentation ALL DEPENDS final.build)
+
+set(OUTPUTS_VARIABLES "")
+string(APPEND OUTPUTS_VARIABLES "set(PdfFilesToReallocate \"${pdfFileName}\")\n")
+
+string(APPEND REPLACEMENTS_VARIABLES "set(Outputs \"\")\n")
+if(DOX_GENERATE_LATEX)
+	string(APPEND REPLACEMENTS_VARIABLES "list(APPEND Outputs ${Type}-pdf)\n")
+	string(APPEND REPLACEMENTS_VARIABLES "set(${Type}-pdf_Dir \"${DOX_OUTPUT_DIRECTORY}/pdf\")\n")
+	string(APPEND REPLACEMENTS_VARIABLES "set(${Type}-pdf_Type ${Type})\n")
+	string(APPEND REPLACEMENTS_VARIABLES "set(${Type}-pdf_DocType pdf)\n")
+endif()
+if(DOX_GENERATE_HTML)
+	string(APPEND REPLACEMENTS_VARIABLES "list(APPEND Outputs ${Type}-html)\n")
+	string(APPEND REPLACEMENTS_VARIABLES "set(${Type}-html_Dir \"${DOX_OUTPUT_DIRECTORY}/html\")\n")
+	string(APPEND REPLACEMENTS_VARIABLES "set(${Type}-html_Type ${Type})\n")
+	string(APPEND REPLACEMENTS_VARIABLES "set(${Type}-html_DocType html)\n")	
+endif()
+# create installation script
+configure_file(${DOCUMENTATION_SCRIPTS_ROOT_DIR}/InstallationScript.cmake.in "${PROJECT_SOURCE_DIR}/InstallationScript.cmake" @ONLY)

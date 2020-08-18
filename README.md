@@ -1,4 +1,4 @@
-# : sparkles : ansi_iso_accuracy_test : sparkles:
+# ansi_iso_accuracy_test
 
 [![Build Status](http://sdk-jenkins-1u/view/Jobs/job/IEngine/job/ANSI-ISO%20Accuracy%20Test/job/master/badge/icon)](http://sdk-jenkins-1u/view/Jobs/job/IEngine/job/ANSI-ISO%20Accuracy%20Test/job/master/)
 
@@ -26,20 +26,7 @@ mkdir _build && cd _build
 Invoke conan to install dependencies and configure your build:
 
 ```bash
-conan install -b missing ..
-```
-
-Tests are build by default. If you want coverage report, run conan with option
-`with_coverage=True`:
-
-```bash
-conan install -b missing -o with_coverage=True ..
-```
-
-To build benchmarks, run conan install with option `with_benchmarks=True`:
-
-```bash
-conan install -b missing -o with_benchmarks=True ..
+conan install -u -b outdated ..
 ```
 
 To build the library, run conan build:
