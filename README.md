@@ -1,4 +1,4 @@
-# :sparkles: ansi_iso_accuracy_test :sparkles:
+# : sparkles : ansi_iso_accuracy_test : sparkles:
 
 [![Build Status](http://sdk-jenkins-1u/view/Jobs/job/IEngine/job/ANSI-ISO%20Accuracy%20Test/job/master/badge/icon)](http://sdk-jenkins-1u/view/Jobs/job/IEngine/job/ANSI-ISO%20Accuracy%20Test/job/master/)
 
@@ -18,7 +18,7 @@ generation.
 Get the source, create a build directory and jump into it:
 
 ```bash
-git clone ssh://git@git.ba.innovatrics.net:7999/~tomas.krupa/ansi_iso_accuracy_test.git
+git clone https://github.com/tomas-krupa/ansi_iso_accuracy_test.git
 cd ansi_iso_accuracy_test
 mkdir _build && cd _build
 ```

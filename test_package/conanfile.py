@@ -7,10 +7,6 @@ class TestPackageConan(ConanFile):
     settings = "os", "compiler", "build_type", "arch"
     generators = "cmake"
 
-    build_requires = [
-        "iengine_ansi_iso/2.4.0@sdk/stable"
-    ]
-
     def build(self):
         cmake = CMake(self)
         cmake.configure()
