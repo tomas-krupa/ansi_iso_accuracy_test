@@ -39,10 +39,10 @@ public:
     return static_cast<TDerived*>(this)->getOptions();
   }
 
-  const FData& getData() const
-  {
-    return static_cast<TDerived*>(this)->getData();
-  }
+//  const FData& getData() const
+//  {
+//    return static_cast<TDerived*>(this)->getData();
+//  }
 
   virtual ~Configuration() = default;
 

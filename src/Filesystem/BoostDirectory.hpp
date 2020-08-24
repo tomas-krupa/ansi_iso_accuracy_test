@@ -25,8 +25,10 @@ template<typename TPath>
 class BoostDirectory final : public Directory<BoostDirectory<TPath>>
 {
 public:
-  bool exists() const { return _path.exists(); };
-  void create() { boost::filesystem::create_directory(_path.string()); }
+  //bool exists() const { return _path.exists(); };
+  void create() const { boost::filesystem::create_directory(_path.string()); }
+
+  std::string getPath() const {return _path.string();}
 
   BoostDirectory(TPath const& path)
     : _path(path){};

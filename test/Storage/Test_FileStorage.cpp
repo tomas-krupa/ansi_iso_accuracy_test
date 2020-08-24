@@ -22,13 +22,14 @@ using TPath = boost::filesystem::path;
  */
 TEST_CASE("Test_FileStorage")
 {
-  SECTION("Fileopen_is_performed_only_on_first_store")
+  //SECTION("Fileopen_is_performed_only_on_first_store") //TODO decide when to open
+  SECTION("Fileopen_is_performed_on_filestorage_creation")
   {
     auto mockFile = std::make_unique<MockFile<TPath>>("mock/path", -1);
     auto mockFilePtr = mockFile.get(); // dirty hack
     FileStorage filesystem(std::move(mockFile));
 
-    CHECK(0 == mockFilePtr->_openCalledCount);
+    CHECK(1 == mockFilePtr->_openCalledCount);
 
     filesystem.store("whatever");
 

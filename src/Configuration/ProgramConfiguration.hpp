@@ -27,32 +27,46 @@ template<class TFilesystem, class TOptions>
 class ProgramConfiguration
 {
 public:
-  ProgramConfiguration(std::shared_ptr<TFilesystem>& fs,
+  ProgramConfiguration(const TFilesystem& fs,
                        int argc,
                        const char** argv)
-    : _cliCfg(fs)
+    : _filesystem(fs),_cliCfg(_filesystem)
   {
     _cliCfg.parse(argc, argv);
     if (_cliCfg.needHelp) { // TODO move otside constructor
       return;
     }
 
-    XMLConfiguration<TFilesystem, TOptions> xmlCfg{ fs };
+    XMLConfiguration<TFilesystem, TOptions> xmlCfg{ _filesystem };
     xmlCfg.parse(_cliCfg.getXmlPath());
 
     _options += _cliCfg.getOptions();
     _options += xmlCfg.getOptions();
+
+    createOutputDir(getOption<std::string>("output-directory"));
   };
 
-  bool needHelp() { return _cliCfg.needHelp; }
+  bool needHelp() const { return _cliCfg.needHelp; }
+  bool doGenuines() const { return not getOption<bool>("exclude-genuines"); }
+  bool doImpostors() const  { return not getOption<bool>("exclude-impostors"); }
+
+  template <typename TReturn>
+  TReturn getOption(std::string const& option) const { return _options.template getData<TReturn>(option); }
 
   template<class TLogger>
-  void logHelp(TLogger const& logger)
+  void logHelp(TLogger const& logger) const
   {
     _cliCfg.logHelp(logger);
   }
 
-  const ProgramConfiguration& GetProgramConfiguration() const { return this; };
+  void createOutputDir(const std::string& path) const {
+    auto outputDirectory = _filesystem.createDirectory(path);
+
+    if (not _filesystem.exists(outputDirectory->getPath()))
+    {
+        outputDirectory->create();
+    }
+  }
 
   virtual ~ProgramConfiguration() = default;
 
@@ -63,5 +77,6 @@ public:
 
 private:
   TOptions _options;
+  const TFilesystem& _filesystem;
   CLIConfiguration<TFilesystem, TOptions> _cliCfg;
 };

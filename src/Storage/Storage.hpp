@@ -15,15 +15,20 @@
 /**
  * @brief Storage
  *
- * Storage facade providing a simple interface to store data.
+ * Storage facade providing a simple interface to hold a data.
  */
-template<class TDerived>
+template<class TDerived, class TRecord, class TIdentifier>
 class Storage
 {
 public:
-  void store(std::string&& data)
+
+  void store(const TRecord &record)  {
+    static_cast<TDerived*>(this)->store(record);
+  }
+
+  std::unique_ptr<TRecord> load(const TIdentifier &id)
   {
-    static_cast<TDerived*>(this)->store(std::forward<std::string>(data));
+    return static_cast<TDerived*>(this)->load(id);
   }
 
   virtual ~Storage() = default;

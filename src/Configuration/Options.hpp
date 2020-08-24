@@ -68,9 +68,12 @@ public:
   };
 
   TOptions& getOptions() { return _options; };
-  Data& getData() { return _data; };
+  template<typename TReturn>
+  TReturn getData(std::string const& option) const { return  boost::get<TReturn>(_data[option]); };
+
+  boost::variant<int, float, bool, std::string>& getDataVariant(std::string const& option) const { return  _data[option]; };
 
 private:
   TOptions _options;
-  Data _data;
+  mutable Data _data;
 };

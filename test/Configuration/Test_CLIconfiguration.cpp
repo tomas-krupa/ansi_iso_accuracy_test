@@ -34,10 +34,10 @@ TEST_CASE("Test_CommandLine")
     SECTION("When_output_has_existing_path_then_it_is_provided")
     {
 
-      auto fs = std::make_shared<MockFileSystem>();
-      fs->CreateDirectory("tmp/some/dir");
-      fs->CreateFile("match.txt");
-      fs->CreateFile("match2.txt");
+      MockFileSystem fs;
+      fs.createDirectory("tmp/some/dir");
+      fs.createFile("match.txt");
+      fs.createFile("match2.txt");
 
       CLI cfg{ fs };
       const char* argv[] = { "ansi_iso_accuracy_test",
@@ -47,17 +47,16 @@ TEST_CASE("Test_CommandLine")
                              "180" };
       cfg.parse(5, argv);
 
-      const auto var = cfg.getData().find("output-directory")->second;
-      CHECK("tmp/some/dir" == boost::get<std::string>(var));
+      CHECK("tmp/some/dir" == cfg.getData<std::string>("output-directory"));
     }
 
     SECTION("When_output_has_non_existing_path_then_invalid_option_is_thrown")
     {
 
-      auto fs = std::make_shared<MockFileSystem>();
+      MockFileSystem fs;
       CLI cfg{ fs };
-      fs->CreateFile("match.txt");
-      fs->CreateFile("match2.txt");
+      fs.createFile("match.txt");
+      fs.createFile("match2.txt");
 
       const char* argv[] = { "ansi_iso_accuracy_test",
                              "--output-directory",
@@ -70,10 +69,10 @@ TEST_CASE("Test_CommandLine")
 
     SECTION("When_no_output_given_then_default_is_provided")
     {
-      auto fs = std::make_shared<MockFileSystem>();
+      MockFileSystem fs;
       CLI cfg{ fs };
-      fs->CreateFile("match.txt");
-      fs->CreateFile("match2.txt");
+      fs.createFile("match.txt");
+      fs.createFile("match2.txt");
 
       const char* argv[] = { "ansi_iso_accuracy_test",
                              "--template-format",
@@ -84,16 +83,15 @@ TEST_CASE("Test_CommandLine")
                              "180" };
       cfg.parse(7, argv);
 
-      CHECK("_result" == boost::get<std::string>(
-                           cfg.getData().find("output-directory")->second));
+      CHECK("_result" == cfg.getData<std::string>("output-directory"));
     }
 
     SECTION("When_output_has_no_existing_directory_then_exception_is_thrown")
     {
-      auto fs = std::make_shared<MockFileSystem>();
+      MockFileSystem fs;
       CLI cfg{ fs };
-      fs->CreateFile("match.txt");
-      fs->CreateFile("match2.txt");
+      fs.createFile("match.txt");
+      fs.createFile("match2.txt");
 
       const char* argv[] = {
         "ansi_iso_accuracy_test",
@@ -107,7 +105,7 @@ TEST_CASE("Test_CommandLine")
   {
     SECTION("When_no_default_input_pairs_given_then_exception_is_thrown")
     {
-      auto fs = std::make_shared<MockFileSystem>();
+      MockFileSystem fs;
       CLI cfg{ fs };
 
       const char* argv[] = { "ansi_iso_accuracy_test", "-v" };
@@ -116,32 +114,31 @@ TEST_CASE("Test_CommandLine")
     }
     SECTION("When_no_input_genuine_pairs_given_then_default_is_provided")
     {
-      auto fs = std::make_shared<MockFileSystem>();
+      MockFileSystem fs;
       CLI cfg{ fs };
-      fs->CreateFile("match.txt");
-      fs->CreateFile("nonmatches.txt");
+      fs.createFile("match.txt");
+      fs.createFile("nonmatches.txt");
 
       const char* argv[] = { "ansi_iso_accuracy_test",
                              "--impostors",
                              "nonmatches.txt" };
       cfg.parse(3, argv);
-      CHECK("match.txt" ==
-            boost::get<std::string>(cfg.getData().find("genuines")->second));
+      CHECK("match.txt" == cfg.getData<std::string>("genuines"));
     }
 
     SECTION("When_no_input_impostor_pairs_given_then_default_is_provided")
     {
-      auto fs = std::make_shared<MockFileSystem>();
+      MockFileSystem fs;
       CLI cfg{ fs };
-      fs->CreateFile("matches.txt");
-      fs->CreateFile("match2.txt");
+      fs.createFile("matches.txt");
+      fs.createFile("match2.txt");
 
       const char* argv[] = { "ansi_iso_accuracy_test",
                              "--genuines",
                              "matches.txt" };
       cfg.parse(3, argv);
-      CHECK("match2.txt" ==
-            boost::get<std::string>(cfg.getData().find("impostors")->second));
+            CHECK("match2.txt" == cfg.getData<std::string>("impostors"));
+
     }
   }
   SECTION("Max_rotation")
@@ -149,10 +146,10 @@ TEST_CASE("Test_CommandLine")
 
     SECTION("When_max_rotation_is_outside_then_exception_is_thrown")
     {
-      auto fs = std::make_shared<MockFileSystem>();
+      MockFileSystem fs;
       CLI cfg{ fs };
-      fs->CreateFile("match.txt");
-      fs->CreateFile("match2.txt");
+      fs.createFile("match.txt");
+      fs.createFile("match2.txt");
 
       const char* argv[] = { "ansi_iso_accuracy_test",
                              "--template-format",
@@ -164,25 +161,25 @@ TEST_CASE("Test_CommandLine")
     }
     SECTION("When_max_rotation_is_is_not_specified_then_default_is_provided")
     {
-      auto fs = std::make_shared<MockFileSystem>();
+      MockFileSystem fs;
       CLI cfg{ fs };
-      fs->CreateFile("match.txt");
-      fs->CreateFile("match2.txt");
+      fs.createFile("match.txt");
+      fs.createFile("match2.txt");
 
       const char* argv[] = { "ansi_iso_accuracy_test",
                              "--template-format",
                              "iso" };
       cfg.parse(3, argv);
-      CHECK(180 == boost::get<int>(cfg.getData().find("max-rotation")->second));
+                  CHECK(180 == cfg.getData<int>("max-rotation"));
     }
   }
 
   SECTION("Help")
   {
-    auto fs = std::make_shared<MockFileSystem>();
+    MockFileSystem fs;
     CLI cfg{ fs }; // TODO
-    fs->CreateFile("match.txt");
-    fs->CreateFile("match2.txt");
+    fs.createFile("match.txt");
+    fs.createFile("match2.txt");
 
     const char* argv[] = { "ansi_iso_accuracy_test", "--help" };
     cfg.parse(2, argv);
@@ -200,10 +197,10 @@ TEST_CASE("Test_CommandLine")
 
   SECTION("When_unknown_option_is_used_then_invalid_option_is_thrown")
   { // TODO and help should be shown
-    auto fs = std::make_shared<MockFileSystem>();
+    MockFileSystem fs;
     CLI cfg{ fs };
-    fs->CreateFile("match.txt");
-    fs->CreateFile("match2.txt");
+    fs.createFile("match.txt");
+    fs.createFile("match2.txt");
 
     const char* argv[] = { "ansi_iso_accuracy_test",
                            "--unrecognized",

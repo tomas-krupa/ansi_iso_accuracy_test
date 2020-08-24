@@ -51,7 +51,7 @@ public:
    *
    *//*
   std::string getXmlPath() const;*/
-  explicit XMLConfiguration(std::shared_ptr<TFilesystem>& fs)
+  explicit XMLConfiguration(const TFilesystem& fs)
     : _fs(fs){};
 
   ~XMLConfiguration() = default;
@@ -64,5 +64,5 @@ public:
 private:
   TOptions _options;
   const std::string _xmlFile;
-  const std::shared_ptr<TFilesystem> _fs;
+  const TFilesystem& _fs;
 };

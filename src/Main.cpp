@@ -10,6 +10,7 @@
 
 #include <AnsiIso/AnsiIso.hpp>
 #include <Application.hpp>
+#include <Biometric/AnsiIsoBiometric.hpp>
 #include <Configuration/ProgramConfiguration.hpp>
 #include <Logger/BoostLogger.hpp>
 #include <innovatrics/ansiiso_accuracy_test.hpp>
@@ -61,19 +62,27 @@ Run(AnsiIsoNativeInterface& ansiIsoNative,
     int argc,
     const char** const argv)
 {
-  auto fs = std::make_shared<Application::TFilesystem>();
+  Application::TFilesystem fileSystem;
 
-  ProgramConfiguration<Application::TFilesystem, Application::TOptions> cfg(
-    fs, argc, argv);
+  ProgramConfiguration<Application::TFilesystem, Application::TOptions> cfg(fileSystem, argc, argv);
 
   if (cfg.needHelp()) {
     cfg.logHelp(logger);
     return;
   }
 
+  using TConf = decltype(cfg);
+  using TLogger = decltype(logger);
+  using TFilesystem = decltype(fileSystem);
+
   AnsiIso ansiiso(ansiIsoNative, logger, cfg);
 
-  Application app(ansiiso, fs, cfg, logger);
+  //Biometric<AnsiIsoBiometric<Application::TFile,TLogger,TConf>,Application::TBiometricStorage> biometric(ansiiso, logger, cfg);
+  AnsiIsoBiometric<Application::TBiometricStorage, BoostLogger, Application::TConfiguration> biometric(ansiiso, logger, cfg);
+
+  OutputStorageFactory<TFilesystem,TConf,Application::TFileStorage> storageFactory{cfg,fileSystem};
+
+  Application app(cfg, fileSystem, logger, storageFactory,biometric);
 
   app.Run();
 }

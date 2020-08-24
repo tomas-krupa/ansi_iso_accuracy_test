@@ -35,37 +35,37 @@ class MockFileSystem final
   : public Filesystem<MockFileSystem, TMockFile, TMockDirectory>
 {
 public:
-  std::map<std::string, std::vector<std::string>> _directories;
-  std::map<std::string, std::shared_ptr<TMockFile>> _files;
-  std::map<std::string, std::shared_ptr<TMockDirectory>> _mockDirectories;
-  std::map<std::string, std::string> _filesContent;
-  std::map<std::string, bool> _existsAttributes;
-  std::map<std::string, bool> _browseExceptions;
-  std::map<std::string, bool> _browseNonStdExceptions;
+  mutable std::map<std::string, std::vector<std::string>> _directories;
+  mutable std::map<std::string, std::shared_ptr<TMockFile>> _files;
+  mutable std::map<std::string, std::shared_ptr<TMockDirectory>> _mockDirectories;
+  mutable std::map<std::string, std::string> _filesContent;
+  mutable std::map<std::string, bool> _existsAttributes;
+  mutable std::map<std::string, bool> _browseExceptions;
+  mutable std::map<std::string, bool> _browseNonStdExceptions;
 
-  std::unique_ptr<TMockFile> CreateInputFile(const std::string& path) noexcept
+  std::unique_ptr<TMockFile> createInputFile(const std::string& path) const  noexcept
   {
     return std::unique_ptr<TMockFile>(
       new TMockFile{ path, (int)filesystem::WriteMode::Read });
   }
 
-  std::unique_ptr<TMockFile> CreateFile(const std::string& path) noexcept
+  std::unique_ptr<TMockFile> createFile(const std::string& path) const noexcept
   {
-    return CreateMockFile(path);
+    return createMockFile(path);
   }
 
-  //        std::unique_ptr<Path> CreatePath(const std::string& path) noexcept
+  //        std::unique_ptr<Path> createPath(const std::string& path) noexcept
   //        {
   //            return std::make_unique<MockPath>(path);
   //        }
 
-  std::unique_ptr<TMockDirectory> CreateDirectory(
-    std::string const& path) noexcept
+  std::unique_ptr<TMockDirectory> createDirectory (
+    std::string const& path) const noexcept
   {
-    return CreateMockDirectory(path);
+    return createMockDirectory(path);
   }
 
-  bool exists(const std::string& path)
+  bool exists(const std::string& path) const
   {
     if (_existsAttributes.find(path) != _existsAttributes.end()) {
       return _existsAttributes[path];
@@ -80,14 +80,14 @@ public:
   MockFileSystem& operator=(const MockFileSystem&) = delete;
 
 private:
-  bool isDirectory(const std::string& path)
+  bool isDirectory(const std::string& path) const
   {
     return (_directories.find(path) != _directories.end());
   }
 
-  bool isFile(const std::string& path) { return not isDirectory(path); }
+  bool isFile(const std::string& path)const { return not isDirectory(path); }
 
-  bool isExists(const std::string& path)
+  bool isExists(const std::string& path)const
   {
     if (_existsAttributes.find(path) != _existsAttributes.end()) {
       return _existsAttributes[path];
@@ -96,7 +96,7 @@ private:
     return true;
   }
 
-  bool isBrowseException(const std::string& path)
+  bool isBrowseException(const std::string& path) const
   {
     if (_browseExceptions.find(path) != _browseExceptions.end()) {
       return _browseExceptions[path];
@@ -105,7 +105,7 @@ private:
     return false;
   }
 
-  bool isBrowseNonStdException(const std::string& path)
+  bool isBrowseNonStdException(const std::string& path) const
   {
     if (_browseNonStdExceptions.find(path) != _browseNonStdExceptions.end()) {
       return _browseNonStdExceptions[path];
@@ -114,7 +114,7 @@ private:
     return false;
   }
 
-  std::unique_ptr<TMockFile> CreateMockFile(const std::string& path)
+  std::unique_ptr<TMockFile> createMockFile(const std::string& path) const
   {
     auto file = std::unique_ptr<TMockFile>();
     // _files[path] = file;
@@ -131,7 +131,7 @@ private:
     return std::move(file);
   }
 
-  std::unique_ptr<TMockDirectory> CreateMockDirectory(const std::string& path)
+  std::unique_ptr<TMockDirectory> createMockDirectory(const std::string& path) const
   {
     auto dir = std::unique_ptr<TMockDirectory>();
     //_mockDirectories[path] = dir;

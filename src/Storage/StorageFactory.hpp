@@ -1,5 +1,5 @@
 /**
- * @file Storage.hpp
+ * @file StorageFactory.hpp
  *
  * @copyright Copyright (c) 2020 Innovatrics s.r.o. All rights reserved.
  *
@@ -13,19 +13,21 @@
 #include <memory>
 #include <string>
 
-class Storage;
-
+namespace storage{
+    using Identifier = std::string;
+}
 /**
- * @brief Storage
+ * @brief StorageFactory
  *
  * Simple factory for creating instances of Storage.
  */
+template<class TDerived, class TStorage>
 class StorageFactory
 {
 public:
-  std::unique_ptr<Storage> create(std::string const& fileName)
+  std::unique_ptr<TStorage> create(storage::Identifier const& fileName) const
   {
-    static_cast<TDerived*>(this)->create(std::forward<std::string>(fileName));
+    return static_cast<const TDerived*>(this)->create(fileName);
   }
 
   virtual ~StorageFactory() = default;

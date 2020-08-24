@@ -21,7 +21,7 @@
 #include "Filesystem.hpp"
 
 #ifdef _WIN32
-#undef CreateDirectory
+#undef createDirectory
 #endif
 
 /**
@@ -34,12 +34,7 @@ class BoostFilesystem final
   : public File<BoostFilesystem<TDirectory, TDerivedFile>>
 {
 public:
-  std::unique_ptr<TDerivedFile> CreateInputFile(const std::string& path)
-  {
-    return static_cast<TDirectory*>(this)->CreateInputFile(path);
-  }
-
-  std::unique_ptr<TDerivedFile> createInputFile(const std::string& path)
+  std::unique_ptr<TDerivedFile> createInputFile(const std::string& path) const
   {
     namespace io = boost::iostreams;
 
@@ -48,7 +43,7 @@ public:
   }
 
   std::unique_ptr<TDerivedFile> createOutputFile(const std::string& path,
-                                                 filesystem::WriteMode mode)
+                                                 filesystem::WriteMode mode) const
   {
     std::ios_base::openmode openMode(std::ios::out | std::ios::binary);
 
@@ -69,7 +64,7 @@ public:
       path, (int)io::mapped_file_base::mapmode::readwrite);
   }
 
-  std::unique_ptr<TDirectory> createDirectory(const std::string& path)
+  std::unique_ptr<TDirectory> createDirectory(const std::string& path) const
   {
     namespace fs = boost::filesystem;
     if (fs::create_directory(path)) {
@@ -78,7 +73,7 @@ public:
     return nullptr;
   }
 
-  bool exists(const std::string& path)
+  bool exists(const std::string& path) const
   {
     return boost::filesystem::exists(path);
   }

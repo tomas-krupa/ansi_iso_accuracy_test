@@ -60,9 +60,9 @@ public:
     }
   }
 
-  bool _isReadToException = false;
-  int _readCalledCount = 0;
-  void readTo(std::vector<uint8_t>& output) // TODO return value
+  mutable bool _isReadToException = false;
+  mutable int _readCalledCount = 0;
+  void readTo(std::vector<uint8_t>& output) const// TODO return value
   {
     ++_readCalledCount;
 
@@ -75,7 +75,7 @@ public:
 
   unsigned int readTo(std::vector<uint8_t>& v,
                       unsigned int from,
-                      unsigned int len) // TODO remove
+                      unsigned int len) const// TODO remove
   {
     ++_readCalledCount;
 

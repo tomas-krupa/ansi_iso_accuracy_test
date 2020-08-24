@@ -15,6 +15,9 @@
 #include <Filesystem/BoostDirectory.hpp>
 #include <Filesystem/BoostFilesystem.hpp>
 #include <Logger/Logger.hpp>
+#include <Biometric/AnsiIsoBiometric.hpp>
+#include <Storage/BiometricStorage.hpp>
+#include <Storage/OutputStorageFactory.hpp>
 
 class AnsiIso;
 class AnsiIsoNativeInterface;
@@ -29,14 +32,21 @@ class Application
 {
 public:
   using TPath = boost::filesystem::path;
-  using TFilesystem =
-    BoostFilesystem<BoostDirectory<TPath>, BoostMMFile<TPath>>;
+  using TFile = BoostMMFile<TPath>;
+  using TFilesystem = BoostFilesystem<BoostDirectory<TPath>, TFile>;
   using TOptions = Options<boost::program_options::options_description>;
+  using TConfiguration = ProgramConfiguration<TFilesystem, TOptions>;
+  using TBiometricStorage = BiometricStorage<TFile>;
+  using TFileStorage = FileStorage<TFile>;
+  using TOutputStorageFactory = OutputStorageFactory<TFilesystem, TConfiguration, TFileStorage>;
+  using TStorageFactory = StorageFactory<TOutputStorageFactory,TFileStorage>;
+  using TBiometric = AnsiIsoBiometric<TBiometricStorage,BoostLogger,TConfiguration>;
 
-  Application(const AnsiIso&,
-              std::shared_ptr<TFilesystem>&,
-              const ProgramConfiguration<TFilesystem, TOptions>&,
-              BoostLogger&);
+  Application(const TConfiguration &configuration,
+                            const TFilesystem &filesystem,
+                            const BoostLogger &logger,
+                            const TStorageFactory& storageFactory,
+                           const TBiometric &biometric );
   /**
    * @brief Run
    *
@@ -49,10 +59,41 @@ public:
   void Run();
 
 private:
-  const AnsiIso& _ansiiso;
-  const std::shared_ptr<TFilesystem>& _fs;
-  const ProgramConfiguration<TFilesystem, TOptions>& _configuration;
+  const TFilesystem& _filesystem;
+  const TConfiguration& _configuration;
   const BoostLogger& _logger;
+  const TBiometric& _biometric;
+  const std::unique_ptr<TBiometricStorage> _biometricStorage;
+  const std::unique_ptr<TFileStorage> _templateListStorage;
+  const std::unique_ptr<TFileStorage> _genuinesStorage;
+  const std::unique_ptr<TFileStorage> _impostorsStorage;
+
+  const CSVReader<TFileStorage,int,std::string> _templateListReader;
+  const CSVReader<TFileStorage,int,int> _genuinesReader;
+  const CSVReader<TFileStorage,int,int> _impostorsReader;
+
+  std::map<int,std::string> _templatesMap;
+  std::map<int,int> _genuinesPairs;
+  std::map<int,int> _impostorsPairs;
+  using TBiometricResult = BiometricResult<BiometricRecord>;
+  std::vector<TBiometricResult> _genuinesResults;
+  std::vector<TBiometricResult> _impostorsResults;
+
+    /**
+   * @brief measureMatches
+   *
+   * Match all input pairs and assigns them matching score.
+     *
+     * @return vector of match results
+   */
+  static std::vector<Application::TBiometricResult> measureMatches(const std::map<int,int>& pairs);
+
+  /**
+   * @brief loadStorage
+   *
+   * Load input text files and templates from filesystem to storage.
+   */
+  void loadStorages();
 
   /**
    * @brief measureResults

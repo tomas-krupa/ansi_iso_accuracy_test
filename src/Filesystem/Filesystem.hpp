@@ -36,30 +36,30 @@ template<class TDerivedFilesystem, class TDirectory, class TDerivedFile>
 class Filesystem
 {
 public:
-  std::unique_ptr<TDerivedFile> createInputFile(const std::string& path)
+  std::unique_ptr<TDerivedFile> createInputFile(const std::string& path) const
   {
-    return static_cast<TDerivedFilesystem*>(this)->CreateInputFile(path);
+    return static_cast<TDerivedFilesystem*>(this)->createInputFile(path);
   }
 
   std::unique_ptr<TDerivedFile> createOutputFile(const std::string& path,
-                                                 filesystem::WriteMode mode)
+                                                 filesystem::WriteMode mode) const
   {
     return static_cast<TDerivedFilesystem*>(this)->createOutputFile(path, mode);
   }
 
-  std::unique_ptr<TDirectory> createDirectory(const std::string& path)
+  std::unique_ptr<TDirectory> createDirectory(const std::string& path) const
   {
-    return static_cast<TDerivedFilesystem*>(this)->CreateDirectory(path);
+    return static_cast<TDerivedFilesystem*>(this)->createDirectory(path);
   }
 
-  bool exists(const std::string& path)
+  bool exists(const std::string& path) const
   {
     return static_cast<TDerivedFilesystem*>(this)->exists(path);
   }
 
-  /*  std::unique_ptr<Path> CreatePath(const std::string& path)
+  /*  std::unique_ptr<Path> createPath(const std::string& path)
     {
-      return static_cast<TDerivedFilesystem*>(this)->CreatePath(path);
+      return static_cast<TDerivedFilesystem*>(this)->createPath(path);
     }*/
 
   virtual ~Filesystem() = default;

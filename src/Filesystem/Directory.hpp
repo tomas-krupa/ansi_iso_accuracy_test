@@ -24,8 +24,9 @@ template<class TDerived>
 class Directory
 {
 public:
-  bool exists() const { return static_cast<TDerived*>(this)->exists(); };
-  void create() { static_cast<TDerived*>(this)->create(); };
+//  bool exists() const { return static_cast<TDerived*>(this)->exists(); };
+  void create() const { static_cast<TDerived*>(this)->create(); };
+  std::string const& getPath() const {return static_cast<TDerived*>(this)->getPath();}
 
   virtual ~Directory() = default;
 

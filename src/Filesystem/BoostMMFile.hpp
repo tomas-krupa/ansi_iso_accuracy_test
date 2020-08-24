@@ -28,21 +28,17 @@ template<typename TPath>
 class BoostMMFile final : public File<BoostMMFile<TPath>>
 {
 public:
-  void open(){};
+  void open() { _file.open(_path); }
 
-  void close(){};
+  void close() { _file.close(); }
 
-  void write(const std::string&){};
+  void write(const std::string& data) {  };//TODO
 
-  void readTo(std::vector<uint8_t>&){};
-
-  unsigned int readTo(std::vector<uint8_t>&,
-                      unsigned int from,
-                      unsigned int len){};
+  std::vector<unsigned char> read() { return { _file.data(), _file.data() + _file.size() }; }
 
   bool isOpen() const noexcept { return _file.is_open(); };
 
-  const TPath& getPath() const noexcept {};
+  const TPath& getPath() const noexcept {  }; //TODO
 
   explicit BoostMMFile(const std::string& path, int mode)
     : _file(createFileParams(path, mode))
@@ -50,11 +46,6 @@ public:
   {}
 
   std::istream readToStream() { return std::istream{ bstream.rdbuf() }; };
-
-  std::vector<unsigned char> readToVector()
-  {
-    return { _file.data(), _file.data() + _file.size() };
-  };
 
   ~BoostMMFile() = default;
 

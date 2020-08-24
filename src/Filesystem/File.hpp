@@ -29,16 +29,9 @@ public:
 
   void close() { static_cast<TDerived*>(this)->close(); }
 
-  void write(const std::string&) { static_cast<TDerived*>(this)->write(); }
+  void write(const std::string& data) { static_cast<TDerived*>(this)->write(data); }
 
-  void readTo(std::vector<uint8_t>&) { static_cast<TDerived*>(this)->readTo(); }
-
-  unsigned int readTo(std::vector<uint8_t>&, // TODO remove
-                      unsigned int from,
-                      unsigned int len)
-  {
-    static_cast<TDerived*>(this)->readTo();
-  }
+  std::vector<unsigned char> read() { return static_cast<TDerived*>(this)->read(); }
 
   bool isOpen() { return static_cast<TDerived*>(this)->isOpen(); }
 
@@ -46,10 +39,6 @@ public:
   {
     static_cast<TDerived*>(this)->getPath();
   }
-
-  //  File(std::string path, int mode)
-  //    : _path(std::move(path))
-  //    , _mode(mode){}
 
   virtual ~File() = default;
 
