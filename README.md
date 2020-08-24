@@ -15,6 +15,12 @@ This project is using [conan.io](https://docs.conan.io/en/latest/) for
 dependencies management, [cmake](https://cmake.org/cmake/help/latest/) for build
 generation.
 
+You need to access to Innovatrics' conan repository or have ANSI@ISO SDK 
+conan package in cache in order to build the project. 
+
+You need ANSI@ISO license in order to run the project. 
+Please contact support@innovatics.com in refer to the license.
+
 Get the source, create a build directory and jump into it:
 
 ```bash
